@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{width:260px;background:#0d1520;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:13px;}
+.head{background:#111b2b;border-bottom:1px solid #1e3050;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:15px;font-weight:800;letter-spacing:-.03em;background:linear-gradient(135deg,#6ee7b7,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.ver{font-family:monospace;font-size:9px;color:#3a5070;}
+.body{padding:16px;}
+.info{font-size:11px;color:#64748b;line-height:1.6;margin-bottom:12px;font-family:monospace;}
+.status{padding:10px;border-radius:8px;background:#0a1018;border:1px solid #1e3050;font-family:monospace;font-size:11px;color:#64748b;text-align:center;}
+.status.ok{border-color:rgba(110,231,183,.3);color:#6ee7b7;background:rgba(110,231,183,.05);}
+</style>
+</head>
+<body>
+<div class="head">
+  <span class="logo">FormAgent</span>
+  <span class="ver">v1.0</span>
+</div>
+<div class="body">
+  <div class="info">Works with the FormAgent website to auto-fill Google Forms.</div>
+  <div class="status ok" id="st">✓ Extension active &amp; ready</div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

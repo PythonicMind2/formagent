@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FormAgent — AI Google Form Filler</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&family=Oxanium:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#0c0e14; --surface:#13151e; --surface2:#1a1d28;
+  --border:#272b3a; --border2:#323748;
+  --accent:#6ee7b7; --accent2:#818cf8; --accent3:#fb923c;
+  --text:#e2e8f0; --muted:#64748b; --muted2:#94a3b8;
+  --danger:#f87171; --success:#6ee7b7;
+  --c-text:#6ee7b7; --c-radio:#818cf8; --c-check:#fb923c; --c-drop:#e879f9;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(110,231,183,.05) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 40% at 80% 100%,rgba(129,140,248,.06) 0%,transparent 60%);}
+.page{position:relative;z-index:1;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2.5rem;
+  border-bottom:1px solid var(--border);background:rgba(12,14,20,.9);
+  backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:.6rem;font-family:'Oxanium',sans-serif;
+  font-size:1.45rem;font-weight:700;letter-spacing:.01em;background:linear-gradient(135deg,#6ee7b7,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-gem{display:none;}
+.free-badge{font-family:'Fira Code',monospace;font-size:.65rem;padding:.25rem .75rem;
+  border-radius:99px;background:rgba(110,231,183,.1);
+  border:1px solid rgba(110,231,183,.2);color:var(--accent);
+  display:flex;align-items:center;gap:.4rem;}
+.free-badge::before{content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--accent);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* LOCAL FILE WARNING */
+
+/* HERO */
+.hero{max-width:720px;margin:0 auto;padding:4.5rem 2rem 2.5rem;text-align:center;}
+.hero-tag{display:inline-block;font-family:'Fira Code',monospace;font-size:.68rem;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:1.25rem;}
+h1{font-family:'Fraunces',serif;font-size:clamp(2.5rem,6vw,4.2rem);
+  font-weight:300;line-height:1.05;letter-spacing:-.04em;margin-bottom:1.1rem;}
+h1 em{font-style:italic;color:var(--accent);}
+.hero-sub{font-size:.97rem;color:var(--muted2);max-width:44ch;margin:0 auto 1rem;line-height:1.8;}
+.no-key-note{display:inline-flex;align-items:center;gap:.5rem;
+  font-family:'Fira Code',monospace;font-size:.72rem;color:var(--success);
+  background:rgba(110,231,183,.07);border:1px solid rgba(110,231,183,.15);
+  border-radius:99px;padding:.4rem 1rem;margin-bottom:2.5rem;}
+
+/* MAIN CARD */
+.wrap{padding:0 1.5rem 2rem;max-width:760px;margin:0 auto;}
+.main-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);}
+.card-head{padding:1.1rem 1.75rem;background:var(--surface2);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-head-left{display:flex;align-items:center;gap:.75rem;}
+.card-head-icon{width:34px;height:34px;border-radius:9px;
+  background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.15);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+.card-head-title{font-weight:600;font-size:.9rem;}
+.card-head-sub{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--muted);}
+.powered-by{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--muted);
+  display:flex;align-items:center;gap:.4rem;}
+.powered-by span{color:var(--accent);font-weight:500;}
+
+.card-body{padding:1.75rem;}
+
+/* FIELDS */
+.field{margin-bottom:1.2rem;}
+.field label{display:block;font-family:'Fira Code',monospace;font-size:.63rem;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.45rem;}
+.field input,.field textarea{width:100%;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;
+  color:var(--text);font-family:'Fira Code',monospace;font-size:.85rem;
+  outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus,.field textarea:focus{border-color:var(--accent2);
+  box-shadow:0 0 0 3px rgba(129,140,248,.1);}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field textarea{resize:vertical;min-height:70px;}
+.hint{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--muted);margin-top:.35rem;line-height:1.6;}
+
+/* PROGRESS */
+.prog-wrap{height:3px;background:var(--border);border-radius:3px;
+  margin-bottom:1rem;overflow:hidden;display:none;}
+.prog-wrap.on{display:block;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:3px;transition:width .5s ease;width:0%;}
+.status-el{font-family:'Fira Code',monospace;font-size:.72rem;color:var(--muted2);
+  text-align:center;margin-bottom:1rem;min-height:1.2rem;display:none;}
+.status-el.on{display:block;}
+.status-el.err{color:var(--danger);}
+.status-el.ok{color:var(--success);}
+
+/* BUTTON */
+.run-btn{width:100%;padding:1rem;
+  background:linear-gradient(135deg,var(--accent2),#6366f1);
+  color:#fff;border:none;border-radius:11px;font-family:'Inter',sans-serif;
+  font-weight:600;font-size:1rem;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:.6rem;letter-spacing:-.01em;}
+.run-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(129,140,248,.35);}
+.run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);
+  border-top-color:#fff;animation:_spin .7s linear infinite;display:none;}
+.spin.on{display:inline-block;}
+@keyframes _spin{to{transform:rotate(360deg)}}
+
+/* RESULTS */
+#resultsSection{display:none;padding:0 1.75rem 1.75rem;}
+#resultsSection.visible{display:block;}
+.res-head{display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 0;border-top:1px solid var(--border);margin-bottom:1rem;}
+.res-title{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;letter-spacing:-.02em;}
+.open-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;
+  border-radius:8px;background:var(--accent3);color:#fff;font-weight:600;
+  font-size:.8rem;text-decoration:none;transition:all .2s;}
+.open-btn:hover{background:#ea7a20;transform:translateY(-1px);}
+.form-banner{background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:.9rem 1.2rem;margin-bottom:1.1rem;display:none;}
+.form-banner h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;
+  letter-spacing:-.02em;margin-bottom:.2rem;}
+.form-banner p{font-size:.78rem;color:var(--muted);}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;}
+.leg{display:flex;align-items:center;gap:.35rem;font-family:'Fira Code',monospace;
+  font-size:.6rem;color:var(--muted);}
+.leg-dot{width:7px;height:7px;border-radius:2px;}
+
+/* QA CARDS */
+.qa-list{display:flex;flex-direction:column;gap:.7rem;}
+.qa-card{background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;animation:_qaIn .3s ease both;}
+@keyframes _qaIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.qa-top{display:flex;align-items:flex-start;gap:.7rem;padding:.9rem 1.2rem .7rem;}
+.qa-num{font-family:'Fira Code',monospace;font-size:.63rem;color:var(--muted);
+  flex-shrink:0;padding-top:.12rem;min-width:1.8rem;}
+.qa-q{font-size:.865rem;font-weight:500;line-height:1.5;}
+.qa-req{font-family:'Fira Code',monospace;font-size:.58rem;color:var(--danger);margin-left:.35rem;}
+.qa-badge{display:inline-flex;align-items:center;gap:.25rem;font-family:'Fira Code',monospace;
+  font-size:.56rem;text-transform:uppercase;letter-spacing:.07em;padding:.12rem .45rem;
+  border-radius:99px;margin-left:.45rem;vertical-align:middle;
+  background:rgba(100,116,139,.1);color:var(--muted);}
+.qa-ans{margin:0 1.2rem .9rem 2.6rem;border-radius:8px;padding:.55rem .85rem;
+  font-size:.81rem;font-weight:500;display:flex;align-items:flex-start;gap:.45rem;}
+.qa-ans.t-text    {background:rgba(110,231,183,.08);border:1px solid rgba(110,231,183,.15);color:var(--c-text);}
+.qa-ans.t-radio   {background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.15);color:var(--c-radio);}
+.qa-ans.t-checkbox{background:rgba(251,146,60,.08); border:1px solid rgba(251,146,60,.15); color:var(--c-check);}
+.qa-ans.t-dropdown{background:rgba(232,121,249,.08);border:1px solid rgba(232,121,249,.15);color:var(--c-drop);}
+.qa-ans.t-scale   {background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.15);color:var(--c-radio);}
+.qa-ans.t-date,.qa-ans.t-time{background:rgba(110,231,183,.08);border:1px solid rgba(110,231,183,.15);color:var(--c-text);}
+.qa-opts{margin:0 1.2rem .85rem 2.6rem;display:flex;flex-wrap:wrap;gap:.35rem;}
+.qa-opt{font-family:'Fira Code',monospace;font-size:.65rem;padding:.18rem .55rem;
+  border-radius:6px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--muted);}
+.qa-opt.sel-r{background:rgba(129,140,248,.12);border-color:rgba(129,140,248,.3);color:var(--c-radio);font-weight:500;}
+.qa-opt.sel-c{background:rgba(251,146,60,.12); border-color:rgba(251,146,60,.3); color:var(--c-check);font-weight:500;}
+.qa-reason{margin:0 1.2rem .55rem 2.6rem;font-size:.7rem;color:var(--muted);
+  font-family:'Fira Code',monospace;font-style:italic;}
+.qa-copy{display:block;margin:0 1.2rem .8rem auto;background:none;
+  border:1px solid var(--border);border-radius:6px;color:var(--muted);
+  font-family:'Fira Code',monospace;font-size:.6rem;padding:.22rem .55rem;cursor:pointer;transition:all .2s;}
+.qa-copy:hover{border-color:var(--accent2);color:var(--accent2);}
+.qa-copy.copied{border-color:var(--success);color:var(--success);}
+
+.reset-btn{background:none;border:1px solid var(--border2);color:var(--muted2);
+  border-radius:8px;padding:.55rem 1.3rem;font-family:'Fira Code',monospace;
+  font-size:.7rem;cursor:pointer;transition:all .2s;display:block;margin:1.25rem auto 0;}
+.reset-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+
+/* HOW IT WORKS */
+.how{max-width:720px;margin:5rem auto 0;padding:0 2rem 5rem;}
+.sec-lbl{font-family:'Fira Code',monospace;font-size:.63rem;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);margin-bottom:.9rem;}
+.how h2{font-family:'Fraunces',serif;font-size:clamp(1.7rem,4vw,2.4rem);
+  font-weight:300;letter-spacing:-.03em;margin-bottom:2.25rem;}
+.how h2 em{font-style:italic;color:var(--accent2);}
+.steps{display:flex;flex-direction:column;}
+.step{display:flex;gap:1.4rem;padding:1.35rem 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.step-l{display:flex;flex-direction:column;align-items:center;}
+.step-n{width:30px;height:30px;border-radius:50%;background:var(--surface2);
+  border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
+  font-family:'Fira Code',monospace;font-size:.7rem;color:var(--muted2);flex-shrink:0;}
+.step-ln{width:1px;flex:1;background:var(--border);margin-top:4px;}
+.step-r{padding-top:.3rem;}
+.step-t{font-weight:600;font-size:.875rem;margin-bottom:.3rem;}
+.step-d{font-size:.8rem;color:var(--muted2);line-height:1.7;}
+
+footer{border-top:1px solid var(--border);padding:1.4rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:'Fira Code',monospace;font-size:.63rem;color:var(--muted);}
+
+@media(max-width:640px){
+  nav{padding:1rem 1.25rem;}
+  .hero{padding:3rem 1.25rem 2rem;}
+  .card-body,#resultsSection{padding:1.25rem;}
+  .how{padding:0 1.25rem 3rem;}
+  footer{flex-direction:column;gap:.4rem;text-align:center;}
+}
+
+
+
+/* Extension status banner */
+#extBanner{display:none;align-items:center;justify-content:space-between;
+  padding:.65rem 1.2rem;background:rgba(110,231,183,.06);
+  border-bottom:1px solid rgba(110,231,183,.12);}
+#extBanner.visible{display:flex;}
+.ext-status{display:flex;align-items:center;gap:.5rem;font-family:'Fira Code',monospace;
+  font-size:.68rem;color:var(--accent);}
+.ext-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 2s infinite;}
+.ext-missing{display:flex;align-items:center;gap:.5rem;font-family:'Fira Code',monospace;
+  font-size:.68rem;color:var(--muted);}
+/* Auto-fill button */
+.autofill-btn{width:100%;padding:1rem;margin-top:.75rem;
+  background:linear-gradient(135deg,var(--accent),#22c55e);
+  color:#0a1a0f;border:none;border-radius:11px;font-family:'Inter',sans-serif;
+  font-weight:700;font-size:1rem;cursor:pointer;transition:all .2s;
+  display:none;align-items:center;justify-content:center;gap:.6rem;letter-spacing:-.01em;}
+.autofill-btn.visible{display:flex;}
+.autofill-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(110,231,183,.3);}
+.autofill-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+/* Fill progress */
+#fillProgress{display:none;margin-top:.75rem;padding:.75rem 1rem;
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  font-family:'Fira Code',monospace;font-size:.72rem;color:var(--muted2);}
+#fillProgress.visible{display:block;}
+.fp-bar-wrap{height:3px;background:var(--border);border-radius:3px;margin-top:.5rem;overflow:hidden;}
+.fp-bar{height:100%;background:linear-gradient(90deg,var(--accent),#22c55e);
+  border-radius:3px;transition:width .3s ease;width:0%;}
+/* Install hint */
+.install-hint{display:none;margin-top:.75rem;padding:.75rem 1rem;
+  background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);
+  border-radius:10px;font-family:'Fira Code',monospace;font-size:.68rem;
+  color:var(--accent3);line-height:1.8;}
+.install-hint.visible{display:block;}
+.install-hint a{color:var(--accent3);text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav>
+  <div class="logo">FormAgent</div>
+  <div class="free-badge">100% Free · No API Key</div>
+</nav>
+
+
+<div class="hero">
+  <span class="hero-tag">Zero setup · Zero cost · Zero API key</span>
+  <h1>Fill any Google Form with <em>AI</em></h1>
+  <p class="hero-sub">Paste a Google Form link. AI reads every question and generates a perfect answer guide — completely free, no account needed.</p>
+</div>
+
+<div class="wrap">
+<div class="main-card">
+
+  <div class="card-head">
+    <div class="card-head-left">
+      <div class="card-head-icon">⚡</div>
+      <div>
+        <div class="card-head-title">AI Form Analyser</div>
+        <div class="card-head-sub">no login · no key · always free</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Extension status banner -->
+  <div id="extBanner">
+    <div class="ext-status"><div class="ext-dot"></div><span id="extStatusText">Extension connected</span></div>
+    <span style="font-family:'Fira Code',monospace;font-size:.62rem;color:var(--muted)">auto-fill ready</span>
+  </div>
+
+  <div class="card-body">
+
+    <div class="field">
+      <label>Google Form URL</label>
+      <input type="url" id="formUrl" placeholder="https://docs.google.com/forms/d/e/..."/>
+      <div class="hint">Paste any public Google Form link — surveys, quizzes, job applications</div>
+    </div>
+
+    <div class="field">
+      <label>Your Profile <span style="text-transform:none;font-size:.6rem;color:var(--muted)">(optional — makes answers more personal)</span></label>
+      <textarea id="userCtx" placeholder="e.g. My name is Arjun, 23, CS student from Hyderabad. I have Python and React skills. Applying for a software internship."></textarea>
+    </div>
+
+    <div class="prog-wrap" id="progWrap"><div class="prog-fill" id="progFill"></div></div>
+    <div class="status-el" id="statusEl"></div>
+
+    <button class="run-btn" id="runBtn" onclick="runAgent()">
+      <div class="spin" id="spinner"></div>
+      <span id="btnLabel">✦ Generate AI Answers — Free</span>
+    </button>
+
+    <button class="autofill-btn" id="autofillBtn" onclick="autoFillForm()">
+      <span>⚡ Auto-Fill Form in New Tab</span>
+    </button>
+
+    <div class="install-hint" id="installHint">
+      ⚡ Want auto-fill? Install the <strong>FormAgent Chrome Extension</strong> to have AI fill the form automatically in a new tab.<br/>
+      👉 See the <a href="#how">How it works</a> section below for install steps.
+    </div>
+
+    <div id="fillProgress">
+      <span id="fpText">Filling form...</span>
+      <div class="fp-bar-wrap"><div class="fp-bar" id="fpBar"></div></div>
+    </div>
+
+  </div>
+
+  <div id="resultsSection">
+
+    <div class="res-head">
+      <div class="res-title">📋 <span id="resTitle">AI Answers</span>
+        <span id="resMeta" style="font-family:'Fira Code',monospace;font-size:.65rem;color:var(--muted);font-weight:400;margin-left:.5rem"></span>
+      </div>
+      <a id="openBtn" href="#" target="_blank" class="open-btn">Open Form ↗</a>
+    </div>
+
+    <div class="form-banner" id="formBanner">
+      <h2 id="formTitleEl"></h2>
+      <p id="formDescEl"></p>
+    </div>
+
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--c-text)"></div>Text</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--c-radio)"></div>Multiple choice</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--c-check)"></div>Checkboxes</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--c-drop)"></div>Dropdown</div>
+    </div>
+
+    <div class="qa-list" id="qaList"></div>
+    <button class="reset-btn" onclick="resetAll()">↺ Analyse another form</button>
+
+  </div>
+</div>
+</div>
+
+<div class="how">
+  <div class="sec-lbl">// How it works</div>
+  <h2>Three steps, <em>zero cost</em></h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-l"><div class="step-n">01</div><div class="step-ln"></div></div>
+      <div class="step-r">
+        <div class="step-t">Paste the form URL</div>
+        <div class="step-d">Drop in any public Google Form link. No login, no API key, no setup at all.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-l"><div class="step-n">02</div><div class="step-ln"></div></div>
+      <div class="step-r">
+        <div class="step-t">Free AI reads &amp; answers everything</div>
+        <div class="step-d">FormAgent fetches the form, extracts every question, and sends them to Pollinations.ai free AI which generates accurate, personalised answers.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-l"><div class="step-n">03</div><div class="step-ln"></div></div>
+      <div class="step-r">
+        <div class="step-t">Auto-fill or follow the guide</div>
+        <div class="step-d">With the extension installed — click <strong style="color:var(--accent)">Auto-Fill Form</strong> and watch AI fill the real form in a new tab automatically. Without the extension — follow the colour-coded answer guide manually.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-l"><div class="step-n">04</div></div>
+      <div class="step-r">
+        <div class="step-t">Install the Chrome Extension <span style="font-family:'Fira Code',monospace;font-size:.7rem;color:var(--accent3);font-weight:400">(one time only)</span></div>
+        <div class="step-d">
+          Download the extension zip below. Then:<br/>
+          1. Go to <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">chrome://extensions</code><br/>
+          2. Enable <strong>Developer Mode</strong> (top right)<br/>
+          3. Click <strong>Load unpacked</strong> → select the <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">extension</code> folder<br/>
+          4. The FormAgent icon appears in your toolbar ✅
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:2rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-align:center;">
+    <div style="font-family:'Fira Code',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.75rem">// Chrome Extension</div>
+    <p style="font-size:.85rem;color:var(--muted2);margin-bottom:1.25rem;line-height:1.7">Download and install once — then FormAgent can auto-fill any Google Form for you in a real browser tab.</p>
+    <a id="dlBtn" href="#" onclick="downloadExt(event)"
+      style="display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;
+      background:linear-gradient(135deg,var(--accent2),#6366f1);color:white;border-radius:10px;
+      font-weight:600;font-size:.875rem;text-decoration:none;transition:all .2s;"
+      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 24px rgba(129,140,248,.3)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''">
+      ⬇ Download Extension
+    </a>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  <span>FormAgent · No server · No tracking · No API key ever</span>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+
+var ICONS  = {text:"✏️",radio:"⦿",checkbox:"☑",dropdown:"▾",scale:"↔",date:"📅",time:"🕐"};
+var LABELS = {text:"text",radio:"multiple choice",checkbox:"checkboxes",dropdown:"dropdown",scale:"scale",date:"date",time:"time"};
+
+// ── UI helpers ────────────────────────────────────────────
+
+function setProgress(pct, msg, cls) {
+  var pw = document.getElementById("progWrap");
+  var pf = document.getElementById("progFill");
+  var sl = document.getElementById("statusEl");
+  pw.classList.add("on");
+  pf.style.width = pct + "%";
+  sl.className = "status-el on" + (cls ? " " + cls : "");
+  sl.textContent = msg;
+}
+
+function setBusy(b) {
+  var btn  = document.getElementById("runBtn");
+  var spin = document.getElementById("spinner");
+  var lbl  = document.getElementById("btnLabel");
+  btn.disabled = b;
+  spin.className = b ? "spin on" : "spin";
+  lbl.textContent = b ? "AI is thinking..." : "✦ Generate AI Answers — Free";
+}
+
+function resetAll() {
+  document.getElementById("resultsSection").classList.remove("visible");
+  document.getElementById("qaList").innerHTML = "";
+  document.getElementById("progWrap").classList.remove("on");
+  document.getElementById("statusEl").className = "status-el";
+  document.getElementById("formBanner").style.display = "none";
+  document.getElementById("autofillBtn").classList.remove("visible");
+  document.getElementById("installHint").classList.remove("visible");
+  document.getElementById("fillProgress").classList.remove("visible");
+  pendingAnswers = null;
+  pendingQuestions = null;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+// ── Fetch form HTML ───────────────────────────────────────
+
+function fetchForm(url) {
+  // If extension is connected, ask it to fetch — it has full access, no CORS issues
+  if (extConnected) {
+    return new Promise(function(resolve, reject) {
+      var timeout = setTimeout(function() { reject(new Error("Extension fetch timed out")); }, 10000);
+      // Send fetch request via bridge
+      window.postMessage({ type: "FA_FETCH_REQUEST", url: url }, "*");
+      function onMsg(e) {
+        if (!e.data || e.data.type !== "FA_FETCH_RESPONSE") return;
+        window.removeEventListener("message", onMsg);
+        clearTimeout(timeout);
+        if (e.data.success) { resolve(e.data.html); }
+        else { reject(new Error(e.data.error || "Extension fetch failed")); }
+      }
+      window.addEventListener("message", onMsg);
+    }).catch(function() {
+      // Extension fetch failed — fall back to proxies
+      return fetchViaProxy(url);
+    });
+  }
+  return fetchViaProxy(url);
+}
+
+function fetchViaProxy(url) {
+  var proxies = [
+    function() {
+      return fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(url), { mode: "cors" })
+        .then(function(r) { if (!r.ok) throw new Error("failed"); return r.json(); })
+        .then(function(d) { if (!d.contents) throw new Error("empty"); return d.contents; });
+    },
+    function() {
+      return fetch("https://corsproxy.io/?" + encodeURIComponent(url))
+        .then(function(r) { if (!r.ok) throw new Error("failed"); return r.text(); });
+    },
+    function() {
+      return fetch("https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url))
+        .then(function(r) { if (!r.ok) throw new Error("failed"); return r.text(); });
+    },
+    function() {
+      return fetch("https://thingproxy.freeboard.io/fetch/" + url)
+        .then(function(r) { if (!r.ok) throw new Error("failed"); return r.text(); });
+    }
+  ];
+  function tryNext(i) {
+    if (i >= proxies.length) throw new Error("All proxies failed. Make sure the form is public.");
+    return proxies[i]().catch(function() { return tryNext(i + 1); });
+  }
+  return Promise.resolve().then(function() { return tryNext(0); });
+}
+
+// ── Parse Google Form HTML ────────────────────────────────
+
+function parseForm(html) {
+  var formTitle = "";
+  var formDesc  = "";
+  var questions = [];
+  var fbData    = null;
+
+  var m = html.match(/FB_PUBLIC_LOAD_DATA_\s*=\s*(\[[\s\S]+?);\s*(?:<\/script>|var )/);
+  if (m) {
+    try { fbData = JSON.parse(m[1]); } catch(e) { fbData = null; }
+  }
+
+  if (fbData) {
+    try {
+      var fi = fbData[1];
+      if (fi) {
+        formTitle = (fi[8] && fi[8][0]) ? fi[8][0] : "";
+        formDesc  = (fi[8] && fi[8][2]) ? fi[8][2] : "";
+        var items   = fi[1] || [];
+        var typeMap = {0:"text",1:"text",2:"radio",3:"dropdown",4:"checkbox",5:"scale",9:"date",10:"time"};
+        items.forEach(function(item, idx) {
+          try {
+            var qt = item[1] || "";
+            if (!qt) return;
+            var fd = item[4];
+            if (!fd || !fd[0]) return;
+            var f    = fd[0];
+            var ft   = f[3];
+            var t    = typeMap[ft] || "text";
+            var opts = [];
+            if ([2,3,4,5].indexOf(ft) !== -1) {
+              (f[1] || []).forEach(function(ch) { if (ch[0]) opts.push(ch[0]); });
+            }
+            questions.push({index:idx, questionText:qt, type:t, options:opts, required:!!(fd[0][2])});
+          } catch(e) {}
+        });
+      }
+    } catch(e) {}
+  }
+
+  // DOM fallback
+  if (questions.length === 0) {
+    var parser = new DOMParser();
+    var doc    = parser.parseFromString(html, "text/html");
+    var tel    = doc.querySelector(".freebirdFormviewerViewHeaderTitle");
+    if (tel) formTitle = tel.textContent.trim();
+    var containers = Array.from(doc.querySelectorAll(".freebirdFormviewerViewItemsItemItem,[data-params]"));
+    containers.forEach(function(c, idx) {
+      var tn = c.querySelector("[role='heading'],.M7eMe,.freebirdFormviewerViewItemsItemItemTitle");
+      if (!tn) return;
+      var qt = tn.textContent.trim();
+      if (!qt) return;
+      var t = "text", opts = [];
+      var rad = c.querySelectorAll("[role='radio']");
+      var chk = c.querySelectorAll("[role='checkbox']");
+      if (rad.length) {
+        t = "radio";
+        rad.forEach(function(r) { var v = r.getAttribute("data-value")||""; if (v) opts.push(v); });
+      } else if (chk.length) {
+        t = "checkbox";
+        chk.forEach(function(r) { var v = r.getAttribute("data-value")||""; if (v) opts.push(v); });
+      } else if (c.querySelector("[role='listbox']")) {
+        t = "dropdown";
+      }
+      questions.push({index:idx, questionText:qt, type:t, options:opts, required:false});
+    });
+  }
+
+  return {formTitle:formTitle, formDesc:formDesc, questions:questions};
+}
+
+// ── Call Pollinations.ai (FREE, no key needed) ────────────
+
+function askAI(questions, userCtx, formTitle) {
+  var prompt = [
+    "You are an expert assistant filling a Google Form. Answer every question accurately.",
+    "",
+    "FORM: " + (formTitle || "Google Form"),
+    "USER PROFILE: " + (userCtx || "No profile provided. Use sensible professional defaults."),
+    "",
+    "QUESTIONS:",
+    JSON.stringify(questions, null, 2),
+    "",
+    "CRITICAL RULES FOR RADIO/CHECKBOX/DROPDOWN:",
+    "- Each question has an 'options' array listing ALL available choices.",
+    "- You MUST set answer= to one of the strings in options[], copied VERBATIM, character-for-character.",
+    "- For radio: pick the single BEST/MOST CORRECT answer. Your 'answer' field must be EXACTLY one of the options[] strings.",
+    "- For checkbox: selected=array of exact option strings that apply.",
+    "- For dropdown: answer must be EXACTLY one of the options[] strings.",
+    "- NEVER paraphrase. If options=['Ai','CyberSecuirty','DevOps'] and answer is AI, write 'Ai' not 'Artificial Intelligence'.",
+    "- answer field = copied verbatim from options[].",
+    "- selected field = [same verbatim string].",
+    "",
+    "IMPORTANT: Reply ONLY with a valid JSON object. No markdown. No code fences.",
+    "",
+    'Format: {"answers":[{"index":0,"type":"text","answer":"...","selected":[],"reasoning":"..."}]}',
+    "",
+    "Rules by type:",
+    "- text/paragraph: answer=your written response, selected=[]",
+    "- radio/scale: answer=EXACT text from options[], selected=[same exact text]",
+    "- checkbox: answer=first selected option, selected=[all chosen exact option texts]",
+    "- dropdown: answer=EXACT text from options[], selected=[same exact text]",
+    "- date: answer=YYYY-MM-DD, selected=[]",
+    "- time: answer=HH:MM, selected=[]",
+    "- For factual/quiz questions, answer correctly and factually.",
+    "- reasoning: one short sentence."
+  ].join("\n");
+
+  return fetch("https://text.pollinations.ai/", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      messages: [
+        {
+          role: "system",
+          content: "You are a precise form-filling assistant. You always reply with valid JSON only, no extra text."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      model: "openai",
+      seed: 42,
+      jsonMode: true
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error("AI service error: " + r.status + ". Try again in a moment.");
+    return r.text();
+  })
+  .then(function(raw) {
+    raw = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+    // Find JSON object in response
+    var start = raw.indexOf("{");
+    var end   = raw.lastIndexOf("}");
+    if (start === -1 || end === -1) throw new Error("AI returned unexpected format. Please try again.");
+    raw = raw.slice(start, end + 1);
+    var parsed = JSON.parse(raw);
+    if (!parsed.answers || !parsed.answers.length) throw new Error("AI returned no answers. Please try again.");
+    return parsed.answers;
+  });
+}
+
+// ── Render answer cards ───────────────────────────────────
+
+function renderCards(questions, answers) {
+  var list = document.getElementById("qaList");
+  list.innerHTML = "";
+
+  answers.forEach(function(ans, i) {
+    var q    = questions.filter(function(x){ return x.index === ans.index; })[0] || questions[i] || {};
+    var type = ans.type || q.type || "text";
+    var icon = ICONS[type]  || "✏️";
+    var lbl  = LABELS[type] || type;
+    var selLow = (ans.selected || []).map(function(s){ return s.toLowerCase(); });
+
+    var optsHtml = "";
+    if (q.options && q.options.length) {
+      optsHtml = "<div class='qa-opts'>";
+      q.options.forEach(function(opt) {
+        var isSel = selLow.indexOf(opt.toLowerCase()) !== -1;
+        var cls   = "qa-opt" + (isSel ? (type === "checkbox" ? " sel-c" : " sel-r") : "");
+        var pre   = isSel ? (type === "checkbox" ? "☑ " : "⦿ ") : "";
+        optsHtml += "<span class='" + cls + "'>" + pre + esc(opt) + "</span>";
+      });
+      optsHtml += "</div>";
+    }
+
+    var display  = (type === "checkbox" && ans.selected && ans.selected.length)
+      ? ans.selected.join(" · ")
+      : (ans.answer || "—");
+    var copyTxt  = (type === "checkbox") ? (ans.selected||[]).join(", ") : (ans.answer||"");
+    var qNum     = (typeof ans.index === "number" ? ans.index : i) + 1;
+    var reasonHtml = ans.reasoning
+      ? "<div class='qa-reason'>" + esc(ans.reasoning) + "</div>"
+      : "";
+
+    var card = document.createElement("div");
+    card.className = "qa-card";
+    card.style.animationDelay = (i * 0.04) + "s";
+    card.innerHTML =
+      "<div class='qa-top'>"
+        + "<span class='qa-num'>Q" + qNum + "</span>"
+        + "<span class='qa-q'>" + esc(q.questionText || "Question")
+          + (q.required ? "<span class='qa-req'>*required</span>" : "")
+          + "<span class='qa-badge'>" + icon + " " + lbl + "</span>"
+        + "</span>"
+      + "</div>"
+      + "<div class='qa-ans t-" + type + "'>"
+        + "<span style='flex-shrink:0;margin-top:.05rem'>" + icon + "</span>"
+        + "<span>" + esc(display) + "</span>"
+      + "</div>"
+      + optsHtml
+      + reasonHtml
+      + "<button class='qa-copy' onclick=\"copyAns(this," + JSON.stringify(copyTxt) + ")\">copy answer</button>";
+
+    list.appendChild(card);
+  });
+}
+
+function copyAns(btn, text) {
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = "copied ✓";
+    btn.classList.add("copied");
+    setTimeout(function(){ btn.textContent = "copy answer"; btn.classList.remove("copied"); }, 2000);
+  });
+}
+
+// ── Main runner ───────────────────────────────────────────
+
+function runAgent() {
+  var formUrl = document.getElementById("formUrl").value.trim();
+  var userCtx = document.getElementById("userCtx").value.trim();
+
+  if (!formUrl) { alert("Please enter a Google Form URL."); return; }
+  if (formUrl.indexOf("docs.google.com/forms") === -1) {
+    alert("Please enter a valid Google Form URL.");
+    return;
+  }
+
+  setBusy(true);
+  document.getElementById("resultsSection").classList.remove("visible");
+  setProgress(10, "🌐 Fetching form...");
+
+  fetchForm(formUrl)
+    .then(function(html) {
+      setProgress(35, "🔍 Extracting questions...");
+      var parsed = parseForm(html);
+      if (parsed.questions.length === 0) {
+        throw new Error("No questions found. Make sure the form is publicly accessible.");
+      }
+      setProgress(60, "🤖 Free AI is generating answers...");
+      return askAI(parsed.questions, userCtx, parsed.formTitle)
+        .then(function(answers) { return {parsed:parsed, answers:answers}; });
+    })
+    .then(function(res) {
+      var parsed  = res.parsed;
+      var answers = res.answers;
+      setProgress(95, "✅ Preparing your answer guide...");
+
+      if (parsed.formTitle) {
+        document.getElementById("formTitleEl").textContent = parsed.formTitle;
+        document.getElementById("formDescEl").textContent  = parsed.formDesc || (parsed.questions.length + " questions");
+        document.getElementById("formBanner").style.display = "block";
+      }
+
+      document.getElementById("openBtn").href  = formUrl;
+      document.getElementById("resTitle").textContent = answers.length + " AI Answers";
+      document.getElementById("resMeta").textContent  = parsed.questions.length + " questions";
+
+      // Store for auto-fill
+      pendingAnswers   = answers;
+      pendingQuestions = parsed.questions;
+
+      // Always show autofill button
+      setTimeout(function() {
+        document.getElementById("autofillBtn").classList.add("visible");
+        document.getElementById("installHint").classList.remove("visible");
+        if (!extConnected) {
+          document.getElementById("installHint").classList.add("visible");
+        }
+      }, 800);
+
+      renderCards(parsed.questions, answers);
+      document.getElementById("resultsSection").classList.add("visible");
+      setProgress(100, "🎉 Done! Open the form and follow the guide below.", "ok");
+
+      setTimeout(function() {
+        document.getElementById("resultsSection").scrollIntoView({behavior:"smooth",block:"start"});
+      }, 200);
+    })
+    .catch(function(err) {
+      setProgress(0, "❌ " + err.message, "err");
+      console.error(err);
+    })
+    .finally(function() { setBusy(false); });
+}
+
+
+// ── Extension state ───────────────────────────────────────────────────────────
+var extConnected     = false;
+var pendingAnswers   = null;
+var pendingQuestions = null;
+
+// ── Bridge listener — extension's bridge.js talks via postMessage ─────────────
+window.addEventListener("message", function(e) {
+  if (!e.data) return;
+
+  // Extension bridge says it is ready
+  if (e.data.type === "FA_EXT_READY") {
+    console.log("[FormAgent] bridge connected!");
+    extConnected = true;
+    var banner = document.getElementById("extBanner");
+    if (banner) banner.classList.add("visible");
+  }
+
+  // Response after sending fill request
+  if (e.data.type === "FA_FILL_RESPONSE") {
+    if (e.data.success) {
+      document.getElementById("fpText").textContent = "✅ Form opened — filling now...";
+      document.getElementById("fpBar").style.width = "55%";
+      document.getElementById("autofillBtn").innerHTML = "<span>⏳ Filling...</span>";
+    } else {
+      document.getElementById("fpText").textContent = "❌ " + (e.data.error || "Extension error");
+      var b = document.getElementById("autofillBtn");
+      b.disabled = false;
+      b.innerHTML = "<span>⚡ Auto-Fill Form in New Tab</span>";
+    }
+  }
+
+  // Progress updates from content script on the form tab
+  if (e.data.type === "FA_PROGRESS") {
+    var fp  = document.getElementById("fillProgress");
+    var txt = document.getElementById("fpText");
+    var bar = document.getElementById("fpBar");
+    var btn = document.getElementById("autofillBtn");
+    fp.classList.add("visible");
+    if (e.data.event === "filling" && e.data.data) {
+      var pct = Math.round((e.data.data.filled / e.data.data.total) * 100);
+      bar.style.width = pct + "%";
+      txt.textContent = "Filling... " + e.data.data.filled + "/" + e.data.data.total + " fields";
+    }
+    if (e.data.event === "done") {
+      bar.style.width = "100%";
+      txt.textContent = "🎉 All done! Review and submit the form.";
+      btn.disabled = false;
+      btn.innerHTML = "<span>⚡ Auto-Fill Again</span>";
+    }
+    if (e.data.event === "error") {
+      txt.textContent = "❌ " + (e.data.data || "Fill error");
+      btn.disabled = false;
+      btn.innerHTML = "<span>⚡ Auto-Fill Form in New Tab</span>";
+    }
+  }
+});
+
+// ── Auto-fill button ──────────────────────────────────────────────────────────
+function autoFillForm() {
+  if (!pendingAnswers || !pendingAnswers.length) {
+    alert("Please generate answers first.");
+    return;
+  }
+  var formUrl = document.getElementById("formUrl").value.trim();
+  if (!formUrl) { alert("No form URL."); return; }
+
+  var btn = document.getElementById("autofillBtn");
+  btn.disabled = true;
+  btn.innerHTML = "<span>⏳ Sending to extension...</span>";
+  document.getElementById("fillProgress").classList.add("visible");
+  document.getElementById("fpText").textContent = "Connecting to extension...";
+  document.getElementById("fpBar").style.width = "10%";
+
+  if (extConnected) {
+    // Send via postMessage — bridge.js picks this up and forwards to background
+    window.postMessage({
+      type: "FA_FILL_REQUEST",
+      data: { formUrl: formUrl, answers: pendingAnswers, questions: pendingQuestions || [] }
+    }, "*");
+  } else {
+    // Fallback — just open the form
+    document.getElementById("fpText").textContent = "Extension not detected — opening form manually.";
+    document.getElementById("fpBar").style.width = "100%";
+    window.open(formUrl, "_blank");
+    btn.disabled = false;
+    btn.innerHTML = "<span>⚡ Auto-Fill Form in New Tab</span>";
+  }
+}
+
+// Download extension as zip hint
+function downloadExt(e) {
+  e.preventDefault();
+  fetch("https://raw.githubusercontent.com/formAgent/extension/main/formagent-extension.zip")
+    .catch(function() { return null; });
+  // Embed the zip directly as base64 for reliable offline download
+  var b64 = "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";
+  var binary = atob(b64);
+  var bytes = new Uint8Array(binary.length);
+  for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  var blob = new Blob([bytes], { type: "application/zip" });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement("a");
+  a.href = url; a.download = "formagent-extension.zip"; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+// Enter key shortcut
+document.getElementById("formUrl").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") runAgent();
+});
+
+</script>
+</body>
+</html>

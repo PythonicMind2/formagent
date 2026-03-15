@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "FormAgent — AI Google Form Filler",
+  "short_name": "FormAgent",
+  "version": "1.0.0",
+  "description": "Auto-fill any Google Form using free AI. Paste a form URL on the FormAgent website, get AI answers, and fill the form in one click. No API key needed.",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://docs.google.com/*",
+    "file:///*",
+    "http://localhost/*",
+    "https://*.netlify.app/*",
+    "https://*.vercel.app/*",
+    "https://*.github.io/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://docs.google.com/forms/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "file:///*",
+        "http://localhost/*",
+        "https://*.netlify.app/*",
+        "https://*.vercel.app/*",
+        "https://*.github.io/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "FormAgent — AI Form Filler",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
