@@ -14,6 +14,46 @@ chrome.runtime.onMessageExternal.addListener(function(message, sender, sendRespo
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 
+  // AI request — background has full network access, no CORS
+  if (message.action === "AI_REQUEST") {
+    fetch("https://text.pollinations.ai/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: message.body
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    })
+    .then(function(text) {
+      sendResponse({ success: true, text: text });
+    })
+    .catch(function(err) {
+      sendResponse({ success: false, error: err.message });
+    });
+    return true;
+  }
+
+  // POST to AI — background has no CORS restrictions
+  if (message.action === "AI_POST") {
+    fetch("https://text.pollinations.ai/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: message.body
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    })
+    .then(function(text) {
+      sendResponse({ success: true, text: text });
+    })
+    .catch(function(err) {
+      sendResponse({ success: false, error: err.message });
+    });
+    return true;
+  }
+
   // Fetch form HTML — background has full network access, no CORS
   if (message.action === "FETCH_FORM") {
     console.log("[FormAgent BG] fetching:", message.url);

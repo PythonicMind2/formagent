@@ -10,7 +10,6 @@
 
     // Relay fill request to background
     if (e.data.type === "FA_FILL_REQUEST") {
-      console.log("[FormAgent Bridge] relaying fill request");
       chrome.runtime.sendMessage({ action: "FILL_FORM", data: e.data.data }, function(response) {
         if (chrome.runtime.lastError) {
           window.postMessage({ type: "FA_FILL_RESPONSE", success: false, error: chrome.runtime.lastError.message }, "*");
@@ -20,9 +19,8 @@
       });
     }
 
-    // Ask background to fetch the form HTML (background has no CORS restrictions)
+    // Fetch form HTML via background (no CORS)
     if (e.data.type === "FA_FETCH_REQUEST") {
-      console.log("[FormAgent Bridge] relaying fetch request to background");
       chrome.runtime.sendMessage({ action: "FETCH_FORM", url: e.data.url }, function(response) {
         if (chrome.runtime.lastError) {
           window.postMessage({ type: "FA_FETCH_RESPONSE", success: false, error: chrome.runtime.lastError.message }, "*");
@@ -32,6 +30,22 @@
           window.postMessage({ type: "FA_FETCH_RESPONSE", success: true, html: response.html }, "*");
         } else {
           window.postMessage({ type: "FA_FETCH_RESPONSE", success: false, error: (response && response.error) || "Fetch failed" }, "*");
+        }
+      });
+    }
+
+    // POST to AI via background (no CORS)
+    if (e.data.type === "FA_AI_REQUEST") {
+      console.log("[FormAgent Bridge] relaying AI POST to background");
+      chrome.runtime.sendMessage({ action: "AI_POST", body: e.data.body }, function(response) {
+        if (chrome.runtime.lastError) {
+          window.postMessage({ type: "FA_AI_RESPONSE", success: false, error: chrome.runtime.lastError.message }, "*");
+          return;
+        }
+        if (response && response.success) {
+          window.postMessage({ type: "FA_AI_RESPONSE", success: true, text: response.text }, "*");
+        } else {
+          window.postMessage({ type: "FA_AI_RESPONSE", success: false, error: (response && response.error) || "AI failed" }, "*");
         }
       });
     }
